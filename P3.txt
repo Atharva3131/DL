@@ -1,0 +1,50 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import datasets, transforms
+
+train = datasets.MNIST('./data', train=True, download=True,
+                       transform=transforms.ToTensor())
+test = datasets.MNIST('./data', train=False, download=True,
+                      transform=transforms.ToTensor())
+
+tr = torch.utils.data.DataLoader(train, 64, shuffle=True)
+te = torch.utils.data.DataLoader(test, 64)
+class CNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Conv2d(1, 16, 3, padding=1), nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Flatten(),
+            nn.Linear(32*7*7, 128), nn.ReLU(),
+            nn.Linear(128, 10)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+model = CNN()
+loss_fn = nn.CrossEntropyLoss()
+opt = optim.Adam(model.parameters(), lr=0.001)
+for e in range(5):
+    loss = 0
+    for x, y in tr:
+        opt.zero_grad()
+        l = loss_fn(model(x), y)
+        l.backward()
+        opt.step()
+        loss += l.item()
+
+    print(f"Epoch {e+1}, Loss: {loss/len(tr):.4f}")
+
+correct = total = 0
+with torch.no_grad():
+    for x, y in te:
+        p = model(x).argmax(1)
+        correct += (p == y).sum().item()
+        total += len(y)
+
+print(f"Accuracy: {100*correct/total:.2f}%")
