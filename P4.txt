@@ -1,0 +1,39 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import datasets,transforms
+import matplotlib.pyplot as plt
+
+data=datasets.MNIST('./data',train=True,download=True,transform=transforms.ToTensor())
+loader=torch.utils.data.DataLoader(data,128,shuffle=True)
+
+class Autoencoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.encoder=nn.Sequential(nn.Linear(784,128),nn.ReLU(),
+                                   nn.Linear(128,64),nn.ReLU(),nn.Linear(64,32))
+        self.decoder=nn.Sequential(nn.Linear(32,64),nn.ReLU(),
+                                   nn.Linear(64,128),nn.ReLU(),
+                                   nn.Linear(128,784),nn.Sigmoid())
+    def forward(self,x): return self.decoder(self.encoder(x))
+
+model=Autoencoder(); loss_fn=nn.MSELoss()
+opt=optim.Adam(model.parameters(),lr=.001)
+
+for e in range(10):
+    loss=0
+    for x,_ in loader:
+        x=x.view(-1,784)
+        opt.zero_grad(); l=loss_fn(model(x),x); l.backward(); opt.step()
+        loss+=l.item()
+    print(f"Epoch {e+1}, Loss: {loss/len(loader):.4f}")
+
+test=datasets.MNIST('./data',train=False,download=True,transform=transforms.ToTensor())
+x,_=next(iter(torch.utils.data.DataLoader(test,10,shuffle=True)))
+with torch.no_grad(): out=model(x.view(-1,784)).view(-1,1,28,28)
+
+plt.figure(figsize=(10,2))
+for i in range(10):
+    plt.subplot(2,10,i+1); plt.imshow(x[i].squeeze(),cmap='gray'); plt.axis('off')
+    plt.subplot(2,10,i+11); plt.imshow(out[i].squeeze(),cmap='gray'); plt.axis('off')
+plt.show()
