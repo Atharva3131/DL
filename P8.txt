@@ -1,0 +1,51 @@
+import random
+
+pos = [0, 0]
+goal = [4, 4]
+obs = [[1, 2], [2, 3], [3, 1]]
+
+def show():
+    for i in range(5):
+        for j in range(5):
+            if [i, j] == pos:
+                print("A", end=" ")
+            elif [i, j] == [0, 0]:
+                print("S", end=" ")
+            elif [i, j] == goal:
+                print("G", end=" ")
+            elif [i, j] in obs:
+                print("O", end=" ")
+            else:
+                print(".", end=" ")
+        print()
+    print()
+
+print("Grid World! Reach G and avoid O.")
+show()
+
+while True:
+    a = input("Move (up/down/left/right): ").lower()
+
+    if a == "up":
+        pos[0] -= 1
+    elif a == "down":
+        pos[0] += 1
+    elif a == "left":
+        pos[1] -= 1
+    elif a == "right":
+        pos[1] += 1
+
+    pos[0] = max(0, min(4, pos[0]))
+    pos[1] = max(0, min(4, pos[1]))
+
+    if pos == goal:
+        print("Congratulations! You reached the goal!")
+        show()
+        break
+    elif pos in obs:
+        print("Game Over! You hit an obstacle.")
+        show()
+        break
+
+    print("State:", tuple(pos), "Reward: -0.01")
+    show()
