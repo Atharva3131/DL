@@ -1,0 +1,49 @@
+import torch p1
+import torch.nn as nn
+import torch.optim as optim
+import re
+from collections import Counter
+
+text = """Natural language processing enables computers to understand
+human language. Word embeddings map words into continuous vector space.
+Neural networks can learn embeddings from context words."""
+
+words = re.findall(r'\w+', text.lower())
+vocab = {w:i for i,w in enumerate(Counter(words))}
+
+pairs = []
+for i in range(len(words)):
+    for j in range(max(0,i-2), min(len(words),i+3)):
+        if i != j:
+            pairs.append((vocab[words[i]], vocab[words[j]]))
+
+class Word2Vec(nn.Module):
+    def __init__(self, n, d):
+        super().__init__()
+        self.emb = nn.Embedding(n,d)
+        self.fc = nn.Linear(d,n)
+
+    def forward(self,x):
+        return self.fc(self.emb(x))
+
+model = Word2Vec(len(vocab),50)
+loss_fn = nn.CrossEntropyLoss()
+opt = optim.Adam(model.parameters(), lr=0.01)
+
+for e in range(50):
+    loss = 0
+    for x,y in pairs:
+        x = torch.tensor([x])
+        y = torch.tensor([y])
+        opt.zero_grad()
+        l = loss_fn(model(x),y)
+        l.backward()
+        opt.step()
+        loss += l.item()
+    if (e+1)%10 == 0:
+        print(f"Epoch {e+1}, Loss: {loss:.4f}")
+
+print("\nEmbedding for 'language':")
+print(model.emb.weight[vocab["language"]])
+print("\nEmbedding for 'neural':")
+print(model.emb.weight[vocab["neural"]])
