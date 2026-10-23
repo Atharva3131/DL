@@ -1,0 +1,22 @@
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.applications.resnet50 import preprocess_input
+from tensorflow.keras.layers import GlobalAveragePooling2D,Dense
+from tensorflow.keras.models import Model
+
+train=ImageDataGenerator(preprocessing_function=preprocess_input).flow_from_directory(
+    'data/train',target_size=(224,224),batch_size=32,class_mode='categorical')
+val=ImageDataGenerator(preprocessing_function=preprocess_input).flow_from_directory(
+    'data/val',target_size=(224,224),batch_size=32,class_mode='categorical')
+
+base=ResNet50(weights='imagenet',include_top=False,input_shape=(224,224,3))
+base.trainable=False
+x=GlobalAveragePooling2D()(base.output)
+x=Dense(128,activation='relu')(x)
+out=Dense(train.num_classes,activation='softmax')(x)
+
+model=Model(base.input,out)
+model.compile('adam','categorical_crossentropy',metrics=['accuracy'])
+model.fit(train,validation_data=val,epochs=5)
+loss,acc=model.evaluate(val)
+print(f"Validation Accuracy: {acc:.4f}")
