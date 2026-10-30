@@ -1,0 +1,55 @@
+def more_general(h1, h2):
+    return all(x == "?" or x == y or y == "φ"
+               for x, y in zip(h1, h2))
+
+
+def candidate(data):
+    n = len(data[0][0])
+    S = ["φ"] * n
+    G = [["?"] * n]
+
+    domains = [
+        ["Sunny", "Overcast", "Rainy"],
+        ["Hot", "Mild", "Cool"],
+        ["High", "Normal"],
+        ["Weak", "Strong"]
+    ]
+
+    for x, y in data:
+        if y == "Yes":
+            for i in range(n):
+                if S[i] == "φ":
+                    S[i] = x[i]
+                elif S[i] != x[i]:
+                    S[i] = "?"
+
+            G = [g for g in G if more_general(g, S)]
+
+        else:
+            new_G = []
+            for g in G:
+                for i in range(n):
+                    if g[i] == "?" and S[i] != "?":
+                        for v in domains[i]:
+                            if v != x[i]:
+                                h = g.copy()
+                                h[i] = v
+                                if more_general(h, S):
+                                    new_G.append(h)
+            G = new_G
+
+    return S, G
+
+
+data = [
+    (["Sunny", "Hot", "High", "Weak"], "No"),
+    (["Sunny", "Hot", "High", "Strong"], "No"),
+    (["Overcast", "Hot", "High", "Weak"], "Yes"),
+    (["Rainy", "Mild", "High", "Weak"], "Yes"),
+    (["Rainy", "Cool", "Normal", "Weak"], "Yes"),
+    (["Rainy", "Cool", "Normal", "Strong"], "No")
+]
+
+S, G = candidate(data)
+print("Final Specific Boundary (S):", S)
+print("Final General Boundary (G):", G)
