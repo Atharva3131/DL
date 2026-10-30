@@ -1,0 +1,24 @@
+def find_s(data):
+    h = ["φ"] * len(data[0][0])
+
+    for x, y in data:
+        if y == "Yes":
+            for i in range(len(h)):
+                if h[i] == "φ":
+                    h[i] = x[i]
+                elif h[i] != x[i]:
+                    h[i] = "?"
+
+    return h
+
+
+data = [
+    (["Sunny", "Hot", "High", "Weak"], "No"),
+    (["Sunny", "Hot", "High", "Strong"], "No"),
+    (["Overcast", "Hot", "High", "Weak"], "Yes"),
+    (["Rainy", "Mild", "High", "Weak"], "Yes"),
+    (["Rainy", "Cool", "Normal", "Weak"], "Yes"),
+    (["Rainy", "Cool", "Normal", "Strong"], "No")
+]
+
+print("Final Hypothesis (Find-S):", find_s(data))
